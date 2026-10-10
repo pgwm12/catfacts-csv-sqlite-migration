@@ -116,6 +116,8 @@ public class App {
             }
             if (method.equals("GET")) {
                 getFactById(exchange, id);
+            } else if (method.equals("DELETE")) {
+                deleteFactById(exchange, id);
             } else {
                 sendJson(exchange, 405, new ErrorBody("method not allowed"));
             }
@@ -167,6 +169,28 @@ public class App {
                     }
                 }
 
+            }
+        }
+
+        /** DELETE /facts/{id} */
+        void deleteFactById(HttpExchange exchange, int id) throws IOException, SQLException {
+
+            String sql = "DELETE FROM facts WHERE id = ?";
+
+            int rowsDeleted;
+
+            try (Connection conn = DriverManager.getConnection(DB_URL);
+                    PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+                pstmt.setInt(1, id);
+                rowsDeleted = pstmt.executeUpdate();
+            }
+
+            if (rowsDeleted > 0) {
+                exchange.sendResponseHeaders(204, -1);
+                exchange.close();
+            } else {
+                sendJson(exchange, 404, new ErrorBody("no fact with id " + id));
             }
         }
 
